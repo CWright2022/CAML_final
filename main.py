@@ -8,6 +8,7 @@ import matplotlib.pyplot as plt
 from collections import Counter
 import load_data
 import feature_extraction
+from matplotlib.ticker import FormatStrFormatter
 
 tld_pattern = re.compile(r'\.([a-zA-Z0-9-]+)(?=[/:\?]|$)')
 
