@@ -5,13 +5,9 @@ import re
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
-from matplotlib.ticker import FormatStrFormatter
 from collections import Counter
-from sklearn.model_selection import train_test_split
-from sklearn.preprocessing import LabelEncoder
-from sklearn.tree import DecisionTreeClassifier
-from sklearn.metrics import classification_report, confusion_matrix
 import load_data
+import feature_extraction
 
 tld_pattern = re.compile(r'\.([a-zA-Z0-9-]+)(?=[/:\?]|$)')
 
@@ -35,7 +31,7 @@ def do_statistics(df: pd.DataFrame) -> None:
     print('URL count by label:')
     for label, count in zip(labels, counts):
         print(f'{label:.<20}{count:.>7}')
-    print(f'{'Total malicious':.<20}{malicious_count:.>7}')
+    print(f'{"Total malicious":.<20}{malicious_count:.>7}')
     print()
 
     fig, ax = plt.subplots(nrows=1, ncols=2)
@@ -124,7 +120,13 @@ def main() -> None:
     # load_data.describe_dataset(df)
 
     print('\nStatistics!')
-    do_statistics(df)
+    # do_statistics(df)
+    # get rid of all www subdomains
+    df['url'] = df['url'].replace('www.', '', regex=True)
+    
+    # do feature extraction
+    feature_extraction.do_feature_extraction(df)
+    print(df.head())
 
 
 if __name__ == "__main__":
