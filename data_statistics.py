@@ -1,7 +1,7 @@
 import re
 import pandas as pd
 import numpy as np
-from urllib.parse import urlparse
+from urllib.parse import urlparse, parse_qs
 import matplotlib.pyplot as plt
 from matplotlib.ticker import FormatStrFormatter
 from collections import Counter
@@ -39,6 +39,15 @@ def count_directory_levels(url) -> int:
     if not path:
         return 0
     return len(path.split('/'))
+
+def count_url_params(url) -> int:
+    if not url.startswith(('http://', 'https://')):
+        url = 'http://' + url 
+    parsed = urlparse(url)
+    query = parsed.query
+    if not query:
+        return 0
+    return len(parse_qs(query))
 
 
 def benign_malicious_histograms(df: pd.DataFrame) -> None:
@@ -271,6 +280,40 @@ def directory_level_count_histograms(df: pd.DataFrame) -> None:
     this_ax.xaxis.set_major_formatter(FormatStrFormatter('%0d'))
 
 
+def url_param_count_histograms(df: pd.DataFrame) -> None:
+    fig, ax = plt.subplots(nrows=1, ncols=2)
+    fig.set_figheight(8)
+    fig.set_figwidth(16)
+    fig.subplots_adjust(bottom=0.25, hspace=0.8, wspace=0.6)
+    fig.suptitle(f'URL Parameter Counts Counts')
+
+    this_ax = ax[0]
+    subdomain_counts = df[df['type'] == 'benign']['url'].apply(count_url_params).to_list()
+    counts, bins = this_ax.hist(subdomain_counts, bins=np.linspace(0,10,11), density=False)[:2]
+    rel_freq = counts / counts.sum()
+    this_ax.cla()
+    this_ax.bar(bins[:-1], rel_freq, width=np.diff(bins), align='edge')
+    this_ax.set_ylim(0, 0.9)
+    this_ax.set_title('Benign URLs')
+    this_ax.set_xlabel('Number of URL Parameters')
+    this_ax.set_ylabel('Relative Frequency')
+    this_ax.set_xticks(bins, bins, rotation=45, ha='right', rotation_mode='anchor', size=8)
+    this_ax.xaxis.set_major_formatter(FormatStrFormatter('%0d'))
+
+    this_ax = ax[1]
+    subdomain_counts = df[df['type'] != 'benign']['url'].apply(count_url_params).to_list()
+    counts, bins = this_ax.hist(subdomain_counts, bins=np.linspace(0,10,11), density=False)[:2]
+    rel_freq = counts / counts.sum()
+    this_ax.cla()
+    this_ax.bar(bins[:-1], rel_freq, width=np.diff(bins), align='edge')
+    this_ax.set_ylim(0, 0.9)
+    this_ax.set_title('Malicious URLs')
+    this_ax.set_xlabel('Number of URL Parameters')
+    this_ax.set_ylabel('Relative Frequency')
+    this_ax.set_xticks(bins, bins, rotation=45, ha='right', rotation_mode='anchor', size=8)
+    this_ax.xaxis.set_major_formatter(FormatStrFormatter('%0d'))
+
+
 def do_statistics(df: pd.DataFrame) -> None:
     benign_malicious_histograms(df)
     tld_counts_histograms(df)
@@ -278,6 +321,7 @@ def do_statistics(df: pd.DataFrame) -> None:
     special_character_histograms(df)
     subdomain_count_histograms(df)
     directory_level_count_histograms(df)
+    url_param_count_histograms(df)
 
     print('Charts should be displayed now...')
     print('Close the plots to continue.')
