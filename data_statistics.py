@@ -21,19 +21,24 @@ def count_special_chars(url) -> int:
 
 def count_subdomains(url):
     if not url.startswith(('http://', 'https://')):
-        url = 'http://' + url
-    
+        url = 'http://' + url 
     parsed = urlparse(url)
     host = parsed.hostname
-
     if host is None:
         return 0
-    
     parts = host.split('.')
-
     if len(parts) <= 2:
         return 0
     return len(parts) - 2
+
+def count_directory_levels(url) -> int:
+    if not url.startswith(('http://', 'https://')):
+        url = 'http://' + url 
+    parsed = urlparse(url)
+    path = parsed.path.strip('/')
+    if not path:
+        return 0
+    return len(path.split('/'))
 
 
 def benign_malicious_histograms(df: pd.DataFrame) -> None:
@@ -212,7 +217,7 @@ def subdomain_count_histograms(df: pd.DataFrame) -> None:
     this_ax.cla()
     this_ax.bar(bins[:-1], rel_freq, width=np.diff(bins), align='edge')
     this_ax.set_ylim(0, 0.75)
-    this_ax.set_title('Benign Subdomains')
+    this_ax.set_title('Benign URLs')
     this_ax.set_xlabel('Number of subdomains')
     this_ax.set_ylabel('Relative Frequency')
     this_ax.set_xticks(bins, bins, rotation=45, ha='right', rotation_mode='anchor', size=8)
@@ -225,7 +230,41 @@ def subdomain_count_histograms(df: pd.DataFrame) -> None:
     this_ax.cla()
     this_ax.bar(bins[:-1], rel_freq, width=np.diff(bins), align='edge')
     this_ax.set_ylim(0, 0.75)
-    this_ax.set_title('Malicious Subdomains')
+    this_ax.set_title('Malicious URLs')
+    this_ax.set_xlabel('Number of subdomains')
+    this_ax.set_ylabel('Relative Frequency')
+    this_ax.set_xticks(bins, bins, rotation=45, ha='right', rotation_mode='anchor', size=8)
+    this_ax.xaxis.set_major_formatter(FormatStrFormatter('%0d'))
+
+
+def directory_level_count_histograms(df: pd.DataFrame) -> None:
+    fig, ax = plt.subplots(nrows=1, ncols=2)
+    fig.set_figheight(8)
+    fig.set_figwidth(16)
+    fig.subplots_adjust(bottom=0.25, hspace=0.8, wspace=0.6)
+    fig.suptitle(f'Directory Levels Counts')
+
+    this_ax = ax[0]
+    subdomain_counts = df[df['type'] == 'benign']['url'].apply(count_directory_levels).to_list()
+    counts, bins = this_ax.hist(subdomain_counts, bins=np.linspace(0,12,13), density=False)[:2]
+    rel_freq = counts / counts.sum()
+    this_ax.cla()
+    this_ax.bar(bins[:-1], rel_freq, width=np.diff(bins), align='edge')
+    this_ax.set_ylim(0, 0.85)
+    this_ax.set_title('Benign URLs')
+    this_ax.set_xlabel('Number of subdomains')
+    this_ax.set_ylabel('Relative Frequency')
+    this_ax.set_xticks(bins, bins, rotation=45, ha='right', rotation_mode='anchor', size=8)
+    this_ax.xaxis.set_major_formatter(FormatStrFormatter('%0d'))
+
+    this_ax = ax[1]
+    subdomain_counts = df[df['type'] != 'benign']['url'].apply(count_directory_levels).to_list()
+    counts, bins = this_ax.hist(subdomain_counts, bins=np.linspace(0,12,13), density=False)[:2]
+    rel_freq = counts / counts.sum()
+    this_ax.cla()
+    this_ax.bar(bins[:-1], rel_freq, width=np.diff(bins), align='edge')
+    this_ax.set_ylim(0, 0.85)
+    this_ax.set_title('Malicious URLs')
     this_ax.set_xlabel('Number of subdomains')
     this_ax.set_ylabel('Relative Frequency')
     this_ax.set_xticks(bins, bins, rotation=45, ha='right', rotation_mode='anchor', size=8)
@@ -238,6 +277,7 @@ def do_statistics(df: pd.DataFrame) -> None:
     url_length_histograms(df)
     special_character_histograms(df)
     subdomain_count_histograms(df)
+    directory_level_count_histograms(df)
 
     print('Charts should be displayed now...')
     print('Close the plots to continue.')
