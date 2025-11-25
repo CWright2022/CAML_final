@@ -49,6 +49,37 @@ def count_url_params(url) -> int:
         return 0
     return len(parse_qs(query))
 
+def get_url_entropy(url) -> float:
+    arr = np.frombuffer(url.encode('utf-8'), dtype=np.uint8)
+
+    # Count occurrences of each unique byte
+    values, counts = np.unique(arr, return_counts=True)
+
+    p = counts / counts.sum()
+
+    # Shannon entropy
+    return float(-np.sum(p * np.log2(p)))
+
+def domain_or_ip(url) -> int:
+    """Returns 0 if it is an IP address, 1 if it is a domain name"""
+    host = urlparse(url).hostname or ''
+    parts = host.split('.')
+    if len(parts) == 4 and all(p.isdigit() for p in parts):
+        if all(0 <= int(p) <= 255 for p in parts):
+            return 0
+    return 1
+
+def get_domain_entropy(url) -> float:
+    host = urlparse(url).hostname
+    if not host:
+        return 0
+    arr = np.frombuffer(host.encode("utf-8"), dtype=np.uint8)
+
+    values, counts = np.unique(arr, return_counts=True)
+    p = counts / counts.sum()
+
+    return float(-np.sum(p * np.log2(p)))
+
 
 def benign_malicious_histograms(df: pd.DataFrame) -> None:
     urls = df['url'].to_numpy(dtype=np.str_)

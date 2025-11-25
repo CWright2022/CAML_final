@@ -28,21 +28,35 @@ class NetModel(nn.Module):
 
         self.input = nn.Linear(features, nodes)
         self.linear1 = nn.Linear(nodes, nodes)
-        self.dropout1 = nn.Dropout(.25)
+        self.bn1 = nn.BatchNorm1d(nodes)
+        self.dropout1 = nn.Dropout(.15)
         self.linear2 = nn.Linear(nodes, nodes)
+        self.bn2 = nn.BatchNorm1d(nodes)
+        self.linear3 = nn.Linear(nodes, nodes)
+        self.bn3 = nn.BatchNorm1d(nodes)
+        self.dropout3 = nn.Dropout(.15)
         self.output = nn.Linear(nodes, classes)
 
     def forward(self, x):
         x = self.input(x)
         x = F.relu(x)
+
         x = self.linear1(x)
+        x = self.bn1(x)
         x = F.relu(x)
         x = self.dropout1(x)
+
         x = self.linear2(x)
+        x = self.bn2(x)
         x = F.relu(x)
-        x = self.output(x)
+
+        x = self.linear3(x)
+        x = self.bn3(x)
+        x = F.relu(x)
+        x = self.dropout3(x)
+
         # don't need softmax because it is applied by using CrossEntropyLoss
-        return x
+        return self.output(x)
 
 
 def evaluate_nn(X: np.ndarray, y: np.ndarray, test_size=0.1) -> None:
