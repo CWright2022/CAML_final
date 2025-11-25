@@ -3,6 +3,7 @@ import numpy as np
 import tldextract
 from typing import Callable
 import data_statistics
+import tldextract
 
 
 def normalize_arr(arr: np.ndarray) -> np.ndarray:
@@ -15,18 +16,28 @@ def do_feature_extraction_decision_tree(df: pd.DataFrame) -> None:
     '''
     extracts features and places them in the dataframe (destructive)
     - url_len: length of the url
-    - tld: top level domain
-    - subdomain: subdomain of the url
-    - prefix: "prefix", the part without ".com" or such
-    - symbols - whether a given symbol is present
+    - spec_count: count of special characters
+    - sub_count: count of subdomains
+    - dir_levels: count of levels to directory
+    - url_params: count of url parameters
+    - url_entropy: entropy of the full url
+    - domain_entropy: entropy of the domain
+    - domain_ip: 1 if domain is an IP address, 0 if domain is a name
     '''
-    df['url_len'] = df['url'].apply(lambda x: len(str(x)))
-    df['tld'] = df['url'].apply(lambda x: tldextract.extract(x).suffix)
-    df['subdomain'] = df['url'].apply(lambda x: tldextract.extract(x).subdomain)
-    df['prefix'] = df['url'].apply(lambda x: tldextract.extract(x).domain)
-    symbols = ['@','?','-','=','#','%','+','$','!','*',',']
-    for symbol in symbols:
-        df[symbol] = df['url'].apply(lambda i: i.count(symbol))
+    df['url_len'] = df['url'].apply(len).to_numpy()
+    df['spec_count'] = df['url'].apply(data_statistics.count_special_chars).to_numpy(dtype=np.float32)
+    df['sub_count'] = df['url'].apply(data_statistics.count_subdomains).to_numpy(dtype=np.float32)
+    df['dir_levels'] = df['url'].apply(data_statistics.count_directory_levels).to_numpy(dtype=np.float32)
+    df['url_params'] = df['url'].apply(data_statistics.count_url_params).to_numpy(dtype=np.float32)
+    df['url_entropy'] = df['url'].apply(data_statistics.get_url_entropy).to_numpy(dtype=np.float32)
+    df['domain_entropy'] = df['url'].apply(data_statistics.get_domain_entropy).to_numpy(dtype=np.float32)
+    df['domain_ip'] = df['url'].apply(data_statistics.domain_or_ip).to_numpy(dtype=np.float32)
+    rem = {"Category": {"benign": 0, "defacement": 1, "phishing":2, "malware":3}}
+    df['Category'] = df['type']
+    df['domain'] = df['url'].apply(lambda x: tldextract.extract(x).domain)
+    df = df.replace(rem)
+
+
 
 
 def do_feature_extraction_nn(df: pd.DataFrame, class_distinguisher: Callable[[str], int]) -> tuple[np.ndarray, np.ndarray]:

@@ -1,18 +1,13 @@
 # CAML FINAL
 # Zach Riback, Cayden Wright, Ariana Ciaschini, Brett Huber
 import sys
-import re
-import pandas as pd
-import numpy as np
-from urllib.parse import urlparse
-import matplotlib.pyplot as plt
 import argparse
-from collections import Counter
 import load_data
 import feature_extraction
 import data_statistics
 import nn
-
+import decision_tree
+from sklearn.model_selection import train_test_split
 
 def main() -> None:
     parser = argparse.ArgumentParser('Argument parser to help with only running certain parts of the code')
@@ -33,8 +28,17 @@ def main() -> None:
 
         # get rid of all www subdomains
         df['url'] = df['url'].replace('www.', '', regex=True)
-
+        
+        # do feature extraction
         feature_extraction.do_feature_extraction_decision_tree(df)
+        
+        #split into train/test
+        X = df.drop(['url','type','Category','domain'],axis=1)#,'type_code'
+        y = df['Category']
+        X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=2)
+        decision_tree.train_decision_tree(X_train, X_test, y_train, y_test)
+        
+        
     elif args.nn_binary or args.nn_malicious:
         df = load_data.load_dataset()
         df = load_data.clean_dataset(df)
