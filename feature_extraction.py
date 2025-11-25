@@ -6,7 +6,9 @@ import data_statistics
 
 
 def normalize_arr(arr: np.ndarray) -> np.ndarray:
-    return (arr - arr.min()) / (arr.max() - arr.min())
+    mean = arr.mean()
+    std = arr.std()
+    return (arr - mean) / std
 
 
 def do_feature_extraction_decision_tree(df: pd.DataFrame) -> None:
