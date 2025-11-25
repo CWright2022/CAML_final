@@ -44,6 +44,10 @@ def balance_dataset(df: pd.DataFrame, class_distinguisher: Callable[[str], int],
     result = result.drop(columns=['class'])
     return result
 
+def remove_class(df: pd.DataFrame, class_to_remove: str) -> pd.DataFrame:
+    df = df.copy()
+    return df[df['type'] != class_to_remove]
+
 def load_dataset() -> pd.DataFrame:
     if os.path.exists(DATASET_PATH):
         print("Datset exists in folder. Skipping download.")

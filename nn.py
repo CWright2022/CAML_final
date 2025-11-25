@@ -62,7 +62,7 @@ class NetModel(nn.Module):
 def evaluate_nn(X: np.ndarray, y: np.ndarray, test_size=0.1) -> None:
     device = get_device()
     features = X.shape[1]
-    classes = 2
+    classes = np.max(y) + 1  # assumes labels 0 -> # classes - 1
     alpha = 1e-3
     batch_size = 128
     iterations = 50
@@ -120,26 +120,29 @@ def evaluate_nn(X: np.ndarray, y: np.ndarray, test_size=0.1) -> None:
         
         # Calculate statistics
         correct_count = (predicted == y_test).sum().item()
-        tp = ((predicted == 1) & (y_test == 1)).sum().item()
-        fp = ((predicted == 1) & (y_test == 0)).sum().item()
-        tn = ((predicted == 0) & (y_test == 0)).sum().item()
-        fn = ((predicted == 0) & (y_test == 1)).sum().item()
-
-        print('\nResults:')
-        print('True Positives:', tp)
-        print('False Positives:', fp)
-        print('True Negatives:', tn)
-        print('False Negatives:', fn)
-        print()
-
         accuracy = correct_count / len(y_test)
-        precision = tp / (tp + fp)
-        recall = tp / (tp + fn)
-        f1_score = (2 * precision * recall) / (precision + recall)
+
+        if classes == 2:
+            tp = ((predicted == 1) & (y_test == 1)).sum().item()
+            fp = ((predicted == 1) & (y_test == 0)).sum().item()
+            tn = ((predicted == 0) & (y_test == 0)).sum().item()
+            fn = ((predicted == 0) & (y_test == 1)).sum().item()
+
+            print('\nResults:')
+            print('True Positives:', tp)
+            print('False Positives:', fp)
+            print('True Negatives:', tn)
+            print('False Negatives:', fn)
+            print()
+
+            precision = tp / (tp + fp)
+            recall = tp / (tp + fn)
+            f1_score = (2 * precision * recall) / (precision + recall)
     
     # Print results
     print(f'Accuracy: {accuracy*100:.2f}%')
-    print(f'Precision: {precision*100:.2f}%')
-    print(f'Recall: {recall*100:.2f}%')
-    print(f'F1-score: {f1_score:.2f}')
+    if classes == 2:
+        print(f'Precision: {precision*100:.2f}%')
+        print(f'Recall: {recall*100:.2f}%')
+        print(f'F1-score: {f1_score:.2f}')
 

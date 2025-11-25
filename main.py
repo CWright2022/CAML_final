@@ -18,7 +18,8 @@ def main() -> None:
     parser = argparse.ArgumentParser('Argument parser to help with only running certain parts of the code')
     parser.add_argument('--statistics', '-s', action='store_true', help='Loads data and does statistics')
     parser.add_argument('--decision_tree', '-d', action='store_true', help='Loads data, extracts features, and trains a decision tree')
-    parser.add_argument('--nueral_network', '-n', action='store_true', help='Loads data, extracts features, and trains a neural network')
+    parser.add_argument('--nn_binary', '-n', action='store_true', help='Loads data, extracts features, and trains a neural network to distinguish benign and malicious URLs')
+    parser.add_argument('--nn_malicious', '-m', action='store_true', help='Loads data, extracts features, and trains a neural network to distinguish between malicious URLs')
 
     args = parser.parse_args()
 
@@ -34,26 +35,48 @@ def main() -> None:
         df['url'] = df['url'].replace('www.', '', regex=True)
 
         feature_extraction.do_feature_extraction_decision_tree(df)
-    elif args.nueral_network:
+    elif args.nn_binary or args.nn_malicious:
         df = load_data.load_dataset()
         df = load_data.clean_dataset(df)
 
-        # label=0 if this is a benign URL, label=1 if this is a malicious URL
-        class_distinguisher = lambda x: 0 if x == 'benign' else 1
+        if args.nn_binary:
+            # label=0 if this is a benign URL, label=1 if this is a malicious URL
+            class_distinguisher = lambda x: 0 if x == 'benign' else 1
 
-        df = load_data.balance_dataset(df, class_distinguisher, 200_000)
-        if df is None:
-            print('Could not balance the dataset! Exiting...')
-            sys.exit()
+            df = load_data.balance_dataset(df, class_distinguisher, 200_000)
+            if df is None:
+                print('Could not balance the dataset! Exiting...')
+                sys.exit()
 
-        X, y = feature_extraction.do_feature_extraction_nn(df, class_distinguisher)
+            X, y = feature_extraction.do_feature_extraction_nn(df, class_distinguisher)
 
-        print('Got X and y with the following shapes:')
-        print(X.shape)
-        print(y.shape)
+            print('Got X and y with the following shapes:')
+            print(X.shape)
+            print(y.shape)
 
-        # Now train and test the model
-        nn.evaluate_nn(X, y)
+            # Now train and test the model
+            nn.evaluate_nn(X, y)
+        elif args.nn_malicious:
+            # Remove benign data
+            df = load_data.remove_class(df, 'benign')
+
+
+            # label = 0,1,2 for phishing,malware,defacement
+            class_distinguisher = lambda x: 0 if x == 'phishing' else 1 if x == 'malware' else 2
+
+            df = load_data.balance_dataset(df, class_distinguisher, 20_000)
+            if df is None:
+                print('Count not balance the dataset! Exiting...')
+                sys.exit()
+            
+            X, y = feature_extraction.do_feature_extraction_nn(df, class_distinguisher)
+
+            print('Got X and y with the following shapes:')
+            print(X.shape)
+            print(y.shape)
+
+            # Now train and test the model
+            nn.evaluate_nn(X, y)
 
     else:
         print('Did not do anything :(')
