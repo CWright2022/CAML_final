@@ -1,6 +1,6 @@
 # CAML FINAL
 # Zach Riback, Cayden Wright, Ariana Ciaschini, Brett Huber
-
+import sys
 import re
 import pandas as pd
 import numpy as np
@@ -11,6 +11,7 @@ from collections import Counter
 import load_data
 import feature_extraction
 import data_statistics
+import nn
 
 
 def main() -> None:
@@ -39,14 +40,20 @@ def main() -> None:
 
         # label=0 if this is a benign URL, label=1 if this is a malicious URL
         class_distinguisher = lambda x: 0 if x == 'benign' else 1
+
+        df = load_data.balance_dataset(df, class_distinguisher, 200_000)
+        if df is None:
+            print('Could not balance the dataset! Exiting...')
+            sys.exit()
+
         X, y = feature_extraction.do_feature_extraction_nn(df, class_distinguisher)
 
         print('Got X and y with the following shapes:')
         print(X.shape)
         print(y.shape)
 
-        # Now train the model!
-        # TODO
+        # Now train and test the model
+        nn.evaluate_nn(X, y)
 
     else:
         print('Did not do anything :(')
