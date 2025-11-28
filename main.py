@@ -7,6 +7,7 @@ import feature_extraction
 import data_statistics
 import nn
 import decision_tree
+import random_forest
 from sklearn.model_selection import train_test_split
 
 def main() -> None:
@@ -15,6 +16,7 @@ def main() -> None:
     parser.add_argument('--decision_tree', '-d', action='store_true', help='Loads data, extracts features, and trains a decision tree')
     parser.add_argument('--nn_binary', '-n', action='store_true', help='Loads data, extracts features, and trains a neural network to distinguish benign and malicious URLs')
     parser.add_argument('--nn_malicious', '-m', action='store_true', help='Loads data, extracts features, and trains a neural network to distinguish between malicious URLs')
+    parser.add_argument('--rf', '-r', action='store_true', help='Loads data, extracts features, and trains a Random Forest model')
 
     args = parser.parse_args()
 
@@ -81,6 +83,26 @@ def main() -> None:
 
             # Now train and test the model
             nn.evaluate_nn(X, y)
+            
+    elif args.rf:
+        df = load_data.load_dataset()
+        df = load_data.clean_dataset(df)
+
+        # remove www for consistency
+        df['url'] = df['url'].replace('www.', '', regex=True)
+
+        # feature extraction (same as decision tree)
+        feature_extraction.do_feature_extraction_decision_tree(df)
+
+        # split into X/y
+        X = df.drop(['url','type','Category','domain'], axis=1)
+        y = df['Category']
+
+        X_train, X_test, y_train, y_test = train_test_split(
+            X, y, test_size=0.2, random_state=2
+        )
+
+        random_forest.train_random_forest(X_train, X_test, y_train, y_test)
 
     else:
         print('Did not do anything :(')
