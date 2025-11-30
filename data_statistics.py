@@ -345,6 +345,72 @@ def url_param_count_histograms(df: pd.DataFrame) -> None:
     this_ax.xaxis.set_major_formatter(FormatStrFormatter('%0d'))
 
 
+def url_entropy_histogram(df: pd.DataFrame) -> None:
+    fig, ax = plt.subplots(nrows=1, ncols=1)
+    fig.set_figheight(8)
+    fig.set_figwidth(16)
+    fig.subplots_adjust(bottom=0.25, hspace=0.8, wspace=0.6)
+    fig.suptitle(f'URL Entropy by URL Type')
+
+    this_ax = ax  # just one so no subscript now
+
+    averages = []
+    averages.append(np.average(df[df['type'] == 'benign']['url'].apply(get_url_entropy).to_list()))
+    averages.append(np.average(df[df['type'] == 'phishing']['url'].apply(get_url_entropy).to_list()))
+    averages.append(np.average(df[df['type'] == 'malware']['url'].apply(get_url_entropy).to_list()))
+    averages.append(np.average(df[df['type'] == 'defacement']['url'].apply(get_url_entropy).to_list()))
+
+    this_ax.bar(['benign', 'phishing', 'malware', 'defacement'], averages)
+    this_ax.set_xlabel('URL Type')
+    this_ax.set_ylabel('Entropy')
+
+
+def domain_entropy_histogram(df: pd.DataFrame) -> None:
+    fig, ax = plt.subplots(nrows=1, ncols=1)
+    fig.set_figheight(8)
+    fig.set_figwidth(16)
+    fig.subplots_adjust(bottom=0.25, hspace=0.8, wspace=0.6)
+    fig.suptitle(f'Domain Entropy by URL Type')
+
+    this_ax = ax  # just one so no subscript now
+
+    averages = []
+    averages.append(np.average(df[df['type'] == 'benign']['url'].apply(get_domain_entropy).to_list()))
+    averages.append(np.average(df[df['type'] == 'phishing']['url'].apply(get_domain_entropy).to_list()))
+    averages.append(np.average(df[df['type'] == 'malware']['url'].apply(get_domain_entropy).to_list()))
+    averages.append(np.average(df[df['type'] == 'defacement']['url'].apply(get_domain_entropy).to_list()))
+
+    this_ax.bar(['benign', 'phishing', 'malware', 'defacement'], averages)
+    this_ax.set_xlabel('URL Type')
+    this_ax.set_ylabel('Entropy')
+
+
+def domain_or_ip_histogram(df: pd.DataFrame) -> None:
+    fig, ax = plt.subplots(nrows=1, ncols=1)
+    fig.set_figheight(8)
+    fig.set_figwidth(16)
+    fig.subplots_adjust(bottom=0.25, hspace=0.8, wspace=0.6)
+    fig.suptitle(f'Domain/IP Proportion by URL Type')
+
+    this_ax = ax  # just one so no subscript now
+
+    # domain_or_ip returns 1 if it is a domain, 0 if it is an IP address
+    domain_proportions = []
+    r = df[df['type'] == 'benign']['url'].apply(domain_or_ip).to_list()
+    domain_proportions.append(sum(r)/len(r))
+    r = df[df['type'] == 'phishing']['url'].apply(domain_or_ip).to_list()
+    domain_proportions.append(sum(r)/len(r))
+    r = df[df['type'] == 'malware']['url'].apply(domain_or_ip).to_list()
+    domain_proportions.append(sum(r)/len(r))
+    r = df[df['type'] == 'defacement']['url'].apply(domain_or_ip).to_list()
+    domain_proportions.append(sum(r)/len(r))
+
+    this_ax.bar(['benign', 'phishing', 'malware', 'defacement'], domain_proportions)
+    this_ax.set_xlabel('URL Type')
+    this_ax.set_ylabel('Domain Proportion')
+
+
+
 def do_statistics(df: pd.DataFrame) -> None:
     benign_malicious_histograms(df)
     tld_counts_histograms(df)
@@ -353,6 +419,9 @@ def do_statistics(df: pd.DataFrame) -> None:
     subdomain_count_histograms(df)
     directory_level_count_histograms(df)
     url_param_count_histograms(df)
+    url_entropy_histogram(df)
+    domain_entropy_histogram(df)
+    domain_or_ip_histogram(df)
 
     print('Charts should be displayed now...')
     print('Close the plots to continue.')
