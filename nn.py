@@ -7,6 +7,7 @@ import torch.optim as optim
 from torch.utils import data as data_utils
 from torch.utils.data import Dataset, DataLoader
 from sklearn.model_selection import train_test_split
+import data_statistics
 
 def get_device():
     use_cuda = torch.cuda.is_available()
@@ -24,46 +25,42 @@ class NetModel(nn.Module):
     def __init__(self, features, classes):
         super().__init__()
 
-        nodes = 64
+        nodes = 128
 
         self.input = nn.Linear(features, nodes)
         self.linear1 = nn.Linear(nodes, nodes)
-        self.bn1 = nn.BatchNorm1d(nodes)
-        self.dropout1 = nn.Dropout(.15)
+        self.dropout1 = nn.Dropout(.2)
         self.linear2 = nn.Linear(nodes, nodes)
-        self.bn2 = nn.BatchNorm1d(nodes)
         self.linear3 = nn.Linear(nodes, nodes)
-        self.bn3 = nn.BatchNorm1d(nodes)
-        self.dropout3 = nn.Dropout(.15)
+        self.dropout3 = nn.Dropout(.2)
         self.output = nn.Linear(nodes, classes)
+
+        self.activation = F.relu
 
     def forward(self, x):
         x = self.input(x)
-        x = F.relu(x)
+        x = self.activation(x)
 
         x = self.linear1(x)
-        x = self.bn1(x)
-        x = F.relu(x)
+        x = self.activation(x)
         x = self.dropout1(x)
 
         x = self.linear2(x)
-        x = self.bn2(x)
-        x = F.relu(x)
+        x = self.activation(x)
 
         x = self.linear3(x)
-        x = self.bn3(x)
-        x = F.relu(x)
+        x = self.activation(x)
         x = self.dropout3(x)
 
         # don't need softmax because it is applied by using CrossEntropyLoss
         return self.output(x)
 
 
-def evaluate_nn(X: np.ndarray, y: np.ndarray, test_size=0.1) -> None:
+def evaluate_nn(X: np.ndarray, y: np.ndarray, test_size=0.1, class_names: list | None = None) -> None:
     device = get_device()
     features = X.shape[1]
     classes = np.max(y) + 1  # assumes labels 0 -> # classes - 1
-    alpha = 1e-3
+    alpha = 1e-4
     batch_size = 128
     iterations = 50
 
@@ -145,4 +142,8 @@ def evaluate_nn(X: np.ndarray, y: np.ndarray, test_size=0.1) -> None:
         print(f'Precision: {precision*100:.2f}%')
         print(f'Recall: {recall*100:.2f}%')
         print(f'F1-score: {f1_score:.2f}')
+    
+    # Generate confusion matrix
+    if class_names is not None:
+        data_statistics.plot_confusion_matrix(y_test.cpu(), predicted.cpu(), class_names)
 

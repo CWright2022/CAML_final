@@ -15,6 +15,8 @@ def main() -> None:
     parser.add_argument('--decision_tree', '-d', action='store_true', help='Loads data, extracts features, and trains a decision tree')
     parser.add_argument('--nn_binary', '-n', action='store_true', help='Loads data, extracts features, and trains a neural network to distinguish benign and malicious URLs')
     parser.add_argument('--nn_malicious', '-m', action='store_true', help='Loads data, extracts features, and trains a neural network to distinguish between malicious URLs')
+    parser.add_argument('--nn_all', '-a', action='store_true', help='Loads data, extracts features, and trains a neural network to distinguish between all URL types')
+
 
     args = parser.parse_args()
 
@@ -39,7 +41,7 @@ def main() -> None:
         decision_tree.train_decision_tree(X_train, X_test, y_train, y_test)
         
         
-    elif args.nn_binary or args.nn_malicious:
+    elif args.nn_binary or args.nn_malicious or args.nn_all:
         df = load_data.load_dataset()
         df = load_data.clean_dataset(df)
 
@@ -70,7 +72,7 @@ def main() -> None:
 
             df = load_data.balance_dataset(df, class_distinguisher, 20_000)
             if df is None:
-                print('Count not balance the dataset! Exiting...')
+                print('Could not balance the dataset! Exiting...')
                 sys.exit()
             
             X, y = feature_extraction.do_feature_extraction_nn(df, class_distinguisher)
@@ -80,10 +82,31 @@ def main() -> None:
             print(y.shape)
 
             # Now train and test the model
-            nn.evaluate_nn(X, y)
+            nn.evaluate_nn(X, y, class_names=['phishing', 'malware', 'defacement'])
+        
+        elif args.nn_all:
+            # label = 0,1,2,3 for benign,phishing,malware,defacement
+            class_distinguisher = lambda x: 0 if x == 'benign' \
+                else 1 if x == 'phishing' \
+                else 2 if x == 'malware' \
+                else 3  # defacement
+
+            df = load_data.balance_dataset(df, class_distinguisher, 20_000)
+            if df is None:
+                print('Could not balance the dataset! Exiting...')
+                sys.exit()
+            
+            X, y = feature_extraction.do_feature_extraction_nn(df, class_distinguisher)
+
+            print('Got X and y with the following shapes:')
+            print(X.shape)
+            print(y.shape)
+
+            nn.evaluate_nn(X, y, class_names=['benign', 'phishing', 'malware', 'defacement'])
+
 
     else:
-        print('Did not do anything :(')
+        parser.print_help()
 
 
 if __name__ == "__main__":

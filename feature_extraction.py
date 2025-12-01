@@ -51,7 +51,7 @@ def do_feature_extraction_nn(df: pd.DataFrame, class_distinguisher: Callable[[st
         URL Parameter count
         URL Entropy
         Domain entropy
-        IP or Domain Name (0 or 1)
+        IP  or Domain Name (0 or 1)
     """
     url_lens = df['url'].apply(len).to_numpy()
     spec_char_counts = df['url'].apply(data_statistics.count_special_chars).to_numpy(dtype=np.float32)

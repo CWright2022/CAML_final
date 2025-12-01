@@ -5,6 +5,8 @@ from urllib.parse import urlparse, parse_qs
 import matplotlib.pyplot as plt
 from matplotlib.ticker import FormatStrFormatter
 from collections import Counter
+from sklearn.metrics import confusion_matrix
+import seaborn as sns
 
 tld_pattern = re.compile(r'\.([a-zA-Z0-9-]+)(?=[/:\?]|$)')
 
@@ -79,6 +81,24 @@ def get_domain_entropy(url) -> float:
     p = counts / counts.sum()
 
     return float(-np.sum(p * np.log2(p)))
+
+def plot_confusion_matrix(y_true, y_pred, class_names):
+    cm = confusion_matrix(y_true, y_pred, normalize='true')
+
+    plt.figure(figsize=(10,8))
+    sns.heatmap(cm, annot=True, fmt='.2f', cmap='Blues', 
+                xticklabels=class_names, yticklabels=class_names,
+                annot_kws={'size':12},
+                cbar_kws={'label': 'Count'})
+    plt.title('Confusion Matrix')
+    plt.ylabel('True Label')
+    plt.xlabel('Predicted Label')
+    plt.tight_layout()
+
+    print('Confusion matrix should be displayed now.')
+    print('Close the charts to continue...')
+
+    plt.show()
 
 
 def benign_malicious_histograms(df: pd.DataFrame) -> None:
