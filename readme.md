@@ -1,3 +1,22 @@
+# CSEC 520/620 – Cyber Analytics & Machine Learning  
+## Final Project: Data Processing & Application  
+### Malicious URL Classification Using Machine Learning
+
+---
+
+## Overview
+
+This project processes raw malicious URL data into a machine-learning–ready format and evaluates multiple ML models—including Decision Trees, Random Forests, and Neural Networks—for detecting and classifying malicious URLs.
+
+The raw dataset undergoes custom cleaning, normalization, and feature extraction implemented in Python, and is evaluated with multiple supervised learning methods.
+
+---
+
+## Project Structure
+
+
+
+
 # Unfinished readme
 
 ## Running machine learning models
