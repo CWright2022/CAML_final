@@ -30,6 +30,11 @@ def main() -> None:
     elif args.decision_tree:
         df = load_data.load_dataset()
         df = load_data.clean_dataset(df)
+        class_distinguisher = lambda x: 0 if x == 'benign' else 1
+        df = load_data.balance_dataset(df, class_distinguisher, 200_000)
+        if df is None:
+            print('Could not balance the dataset! Exiting...')
+            sys.exit()
 
         # get rid of all www subdomains
         df['url'] = df['url'].replace('www.', '', regex=True)

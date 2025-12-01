@@ -3,6 +3,7 @@ from sklearn.metrics import confusion_matrix, classification_report, accuracy_sc
 import seaborn as sns
 import matplotlib.pyplot as plt
 import numpy as np
+import data_statistics
 
 def train_decision_tree(X_train, X_test, y_train, y_test) -> None:
     model = DecisionTreeClassifier()
@@ -13,6 +14,7 @@ def train_decision_tree(X_train, X_test, y_train, y_test) -> None:
     print('Classification_report')
     print(classification_report(y_test, pred))
     print('Confusion_matrix:')
-    cf_matrix = confusion_matrix(y_test, pred)
-    plot_ = sns.heatmap(cf_matrix/np.sum(cf_matrix), annot=True,fmt= '0.2%')
-    plt.show()
+    data_statistics.plot_confusion_matrix(y_test, pred, ['benign', 'phishing', 'malware', 'defacement'])
+    # cf_matrix = confusion_matrix(y_test, pred)
+    # plot_ = sns.heatmap(cf_matrix/np.sum(cf_matrix), annot=True,fmt= '0.2%')
+    # plt.show()
