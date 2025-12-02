@@ -9,11 +9,13 @@ import nn
 import decision_tree
 import random_forest
 from sklearn.model_selection import train_test_split
+from sklearn.tree import DecisionTreeClassifier
 
 def main() -> None:
     parser = argparse.ArgumentParser('Argument parser to help with only running certain parts of the code')
     parser.add_argument('--statistics', '-s', action='store_true', help='Loads data and does statistics')
     parser.add_argument('--decision_tree', '-d', action='store_true', help='Loads data, extracts features, and trains a decision tree')
+    parser.add_argument('--decision_tree_binary', '-db', action='store_true', help='Loads data, extracts features, and trains a decision tree for binary classification (benign vs malicious)')
     parser.add_argument('--random_forest', '-r', action='store_true', help='Loads data, extracts features, and trains a Random Forest') 
     parser.add_argument('--nn_binary', '-n', action='store_true', help='Loads data, extracts features, and trains a neural network to distinguish benign and malicious URLs')
     parser.add_argument('--nn_malicious', '-m', action='store_true', help='Loads data, extracts features, and trains a neural network to distinguish between malicious URLs')
@@ -30,23 +32,69 @@ def main() -> None:
     elif args.decision_tree:
         df = load_data.load_dataset()
         df = load_data.clean_dataset(df)
-        class_distinguisher = lambda x: 0 if x == 'benign' else 1
-        df = load_data.balance_dataset(df, class_distinguisher, 200_000)
+        # multi-class mapping consistent with feature_extraction.do_feature_extraction_decision_tree
+        class_distinguisher = lambda x: 0 if x == 'benign' \
+            else 1 if x == 'defacement' \
+            else 2 if x == 'phishing' \
+            else 3
+        # Determine the maximum safe class size: use the smallest available class count, capped at 200k
+        mapped = df['type'].apply(class_distinguisher)
+        min_count = int(mapped.value_counts().min())
+        class_size = min(200_000, min_count)
+        if class_size <= 0:
+            print('Dataset does not contain examples for all classes. Exiting...')
+            sys.exit()
+
+        df = load_data.balance_dataset(df, class_distinguisher, class_size)
         if df is None:
-            print('Could not balance the dataset! Exiting...')
+            print('Could not balance the dataset with class_size=', class_size, "Exiting...")
             sys.exit()
 
         # get rid of all www subdomains
         df['url'] = df['url'].replace('www.', '', regex=True)
         
-        # do feature extraction
+        # do feature extraction (this will populate `Category` numeric codes)
         feature_extraction.do_feature_extraction_decision_tree(df)
         
-        #split into train/test
-        X = df.drop(['url','type','Category','domain'],axis=1)#,'type_code'
+        # split into train/test using multi-class `Category` as the target
+        X = df.drop(['url','type','Category','domain'], axis=1)
         y = df['Category']
         X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=2)
-        decision_tree.train_decision_tree(X_train, X_test, y_train, y_test)
+        model = DecisionTreeClassifier()
+        decision_tree.train_decision_tree(model, X_train, X_test, y_train, y_test, class_names=['benign', 'defacement', 'phishing', 'malware'])
+        decision_tree.print_tree(model, X_train.columns)
+
+    elif args.decision_tree_binary:
+        df = load_data.load_dataset()
+        df = load_data.clean_dataset(df)
+        # binary mapping: 0 = benign, 1 = malicious
+        class_distinguisher = lambda x: 0 if x == 'benign' else 1
+
+        mapped = df['type'].apply(class_distinguisher)
+        min_count = int(mapped.value_counts().min())
+        class_size = min(200_000, min_count)
+        if class_size <= 0:
+            print('Dataset does not contain examples for both classes. Exiting...')
+            sys.exit()
+
+        df = load_data.balance_dataset(df, class_distinguisher, class_size)
+        if df is None:
+            print('Could not balance the dataset with class_size=', class_size, "Exiting...")
+            sys.exit()
+
+        # get rid of all www subdomains
+        df['url'] = df['url'].replace('www.', '', regex=True)
+
+        # feature extraction (still ok to call; Category will be created but we will use binary labels)
+        feature_extraction.do_feature_extraction_decision_tree(df)
+
+        # split into train/test using binary labels
+        X = df.drop(['url','type','Category','domain'], axis=1)
+        y = df['type'].apply(class_distinguisher)
+        X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=2)
+        model = DecisionTreeClassifier()
+        decision_tree.train_decision_tree(model, X_train, X_test, y_train, y_test, class_names=['benign', 'malicious'])
+        decision_tree.print_tree(model, X_train.columns)
         
     elif args.random_forest:  
         df = load_data.load_dataset()

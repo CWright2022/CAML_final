@@ -1,4 +1,4 @@
-# loads dataset from kagglehub
+# loads dataset from kagglehub (optional)
 import kagglehub
 import pandas as pd
 import shutil
