@@ -18,6 +18,7 @@ def main() -> None:
     parser.add_argument('--nn_binary', '-n', action='store_true', help='Loads data, extracts features, and trains a neural network to distinguish benign and malicious URLs')
     parser.add_argument('--nn_malicious', '-m', action='store_true', help='Loads data, extracts features, and trains a neural network to distinguish between malicious URLs')
     parser.add_argument('--nn_all', '-a', action='store_true', help='Loads data, extracts features, and trains a neural network to distinguish between all URL types')
+    parser.add_argument('--balance', action='store_true', help='Balance the dataset before training')
 
 
     args = parser.parse_args()
@@ -51,9 +52,14 @@ def main() -> None:
     elif args.random_forest:  
         df = load_data.load_dataset()
         df = load_data.clean_dataset(df)
+        class_distinguisher = lambda x: 0 if x == 'benign' else 1
+        df = load_data.balance_dataset(df, class_distinguisher, 200_000)
+        if df is None:
+            print('Could not balance the dataset! Exiting...')
+            sys.exit()
 
         # Get rid of all www subdomains
-        df['url'] = df['url'].replace('www.', '', regex=True)
+        df['url'] = df['url'].replace('www.', '', regex = True)
 
         # Completes Feature extraction
         feature_extraction.do_feature_extraction_decision_tree(df)
