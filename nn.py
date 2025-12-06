@@ -144,6 +144,21 @@ def evaluate_nn(X: np.ndarray, y: np.ndarray, test_size=0.1, class_names: list |
         print(f'F1-score: {f1_score:.2f}')
     
     # Generate confusion matrix
-    if class_names is not None:
-        data_statistics.plot_confusion_matrix(y_test.cpu(), predicted.cpu(), class_names)
+    # Plot confusion matrix for binary classification or when class_names provided
+    try:
+        y_cpu = y_test.cpu().numpy()
+        pred_cpu = predicted.cpu().numpy()
+    except Exception:
+        # fallback to tensors if cpu->numpy isn't available
+        y_cpu = y_test.cpu()
+        pred_cpu = predicted.cpu()
+
+    if classes == 2:
+        # ensure we have readable class names
+        names = class_names if class_names is not None else ['benign', 'malicious']
+        data_statistics.plot_confusion_matrix(y_cpu, pred_cpu, names)
+    elif class_names is not None:
+        data_statistics.plot_confusion_matrix(y_cpu, pred_cpu, class_names)
+    else:
+         data_statistics.plot_confusion_matrix(y_test.cpu(), predicted.cpu(), class_names = None)
 
