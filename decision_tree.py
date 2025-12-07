@@ -6,6 +6,7 @@ import numpy as np
 import data_statistics
 
 def train_decision_tree(X_train, X_test, y_train, y_test) -> None:
+    """Train and evaluate the decision tree. Also automatically plots the confusion matrix"""
     model = DecisionTreeClassifier()
     model.fit(X_train, y_train)
     pred = model.predict(X_test)

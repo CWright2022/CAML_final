@@ -57,6 +57,7 @@ class NetModel(nn.Module):
 
 
 def evaluate_nn(X: np.ndarray, y: np.ndarray, test_size=0.1, class_names: list | None = None) -> None:
+    """Train and test the neural network. Return results"""
     device = get_device()
     features = X.shape[1]
     classes = np.max(y) + 1  # assumes labels 0 -> # classes - 1

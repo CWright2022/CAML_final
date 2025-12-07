@@ -45,10 +45,12 @@ def balance_dataset(df: pd.DataFrame, class_distinguisher: Callable[[str], int],
     return result
 
 def remove_class(df: pd.DataFrame, class_to_remove: str) -> pd.DataFrame:
+    """Removes all rows of the givne type from thte data frame"""
     df = df.copy()
     return df[df['type'] != class_to_remove]
 
 def load_dataset() -> pd.DataFrame:
+    """Loads samples from the dataset. Skips download if the user has already downloaded it"""
     if os.path.exists(DATASET_PATH):
         print("Datset exists in folder. Skipping download.")
     else:
@@ -60,5 +62,6 @@ def load_dataset() -> pd.DataFrame:
     return data_frame
 
 def describe_dataset(df: pd.DataFrame) -> None:
+    """Print a description of the dataset"""
     print("Dataset Description:")
     print(df.describe())
