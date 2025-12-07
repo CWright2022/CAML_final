@@ -45,7 +45,7 @@ def balance_dataset(df: pd.DataFrame, class_distinguisher: Callable[[str], int],
     return result
 
 def remove_class(df: pd.DataFrame, class_to_remove: str) -> pd.DataFrame:
-    """Removes all rows of the givne type from thte data frame"""
+    """Removes all rows of the given type from the data frame"""
     df = df.copy()
     return df[df['type'] != class_to_remove]
 
@@ -55,9 +55,11 @@ def load_dataset() -> pd.DataFrame:
         print("Datset exists in folder. Skipping download.")
     else:
         # Download latest version
+        if not os.path.exists(os.path.dirname(DATASET_PATH)):
+            os.mkdir(os.path.dirname(DATASET_PATH))
         path = kagglehub.dataset_download("sid321axn/malicious-urls-dataset")
         print("Downloaded dataset to:", path)
-        shutil.move(path+"/malicious_phish.csv", DATASET_PATH)
+        shutil.copy(path+"/malicious_phish.csv", DATASET_PATH)
     data_frame = pd.read_csv(DATASET_PATH)
     return data_frame
 
