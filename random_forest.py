@@ -16,6 +16,7 @@ def train_random_forest(
     random_state: int = 42,
     class_names: list | None = None,
 ) -> None:
+    """Train and evalute a random forest given these parameters. Also automatically creates the confusion matrix"""
 
     model = RandomForestClassifier(
         n_estimators=n_estimators,

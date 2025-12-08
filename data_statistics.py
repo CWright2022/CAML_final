@@ -22,6 +22,7 @@ def count_special_chars(url) -> int:
     return sum(1 for c in url if c not in normal_chars)
 
 def count_subdomains(url):
+    """Return the number of subdomains of this URL"""
     if not url.startswith(('http://', 'https://')):
         url = 'http://' + url 
     parsed = urlparse(url)
@@ -34,6 +35,7 @@ def count_subdomains(url):
     return len(parts) - 2
 
 def count_directory_levels(url) -> int:
+    """Return the directory depth of this URL"""
     if not url.startswith(('http://', 'https://')):
         url = 'http://' + url 
     parsed = urlparse(url)
@@ -43,6 +45,7 @@ def count_directory_levels(url) -> int:
     return len(path.split('/'))
 
 def count_url_params(url) -> int:
+    """Return the count of URL parameters of this URL"""
     if not url.startswith(('http://', 'https://')):
         url = 'http://' + url 
     parsed = urlparse(url)
@@ -52,6 +55,7 @@ def count_url_params(url) -> int:
     return len(parse_qs(query))
 
 def get_url_entropy(url) -> float:
+    """Return the Shannon entropy for this URL"""
     arr = np.frombuffer(url.encode('utf-8'), dtype=np.uint8)
 
     # Count occurrences of each unique byte
@@ -72,6 +76,7 @@ def domain_or_ip(url) -> int:
     return 1
 
 def get_domain_entropy(url) -> float:
+    """Return the Shannon entropy of the domain name for this URL"""
     host = urlparse(url).hostname
     if not host:
         return 0
@@ -83,6 +88,7 @@ def get_domain_entropy(url) -> float:
     return float(-np.sum(p * np.log2(p)))
 
 def plot_confusion_matrix(y_true, y_pred, class_names):
+    """Plot and display a confusion matrix given these predictions and targets"""
     cm = confusion_matrix(y_true, y_pred, normalize='true')
 
     plt.figure(figsize=(10,8))
@@ -102,6 +108,7 @@ def plot_confusion_matrix(y_true, y_pred, class_names):
 
 
 def benign_malicious_histograms(df: pd.DataFrame) -> None:
+    """Create a histogram of benign, malicious, and phishing, malware, and defacement URL counts"""
     urls = df['url'].to_numpy(dtype=np.str_)
     types = df['type'].to_numpy(dtype=np.str_)
     
@@ -144,6 +151,7 @@ def benign_malicious_histograms(df: pd.DataFrame) -> None:
 
 
 def tld_counts_histograms(df: pd.DataFrame) -> None:
+    """Create a histogram showing the top 20 and bottom 20 by benign proportion of top level domain names"""
     benign_tlds = df[df['type'] == 'benign']['url'].apply(get_tld).to_list()
     malicious_tlds = df[df['type'] != 'benign']['url'].apply(get_tld).to_list()
     all_tlds = benign_tlds + malicious_tlds
@@ -194,6 +202,7 @@ def tld_counts_histograms(df: pd.DataFrame) -> None:
 
 
 def url_length_histograms(df: pd.DataFrame) -> None:
+    """Create a histogram of URL lengths"""
     fig, ax = plt.subplots(nrows=1, ncols=2)
     fig.set_figheight(8)
     fig.set_figwidth(16)
@@ -230,6 +239,7 @@ def url_length_histograms(df: pd.DataFrame) -> None:
 
 
 def special_character_histograms(df: pd.DataFrame) -> None:
+    """Create a histogram of number of special characters in the URLs"""
     fig, ax = plt.subplots(nrows=1, ncols=2)
     fig.set_figheight(8)
     fig.set_figwidth(16)
@@ -279,6 +289,7 @@ def special_character_histograms(df: pd.DataFrame) -> None:
 
 
 def subdomain_count_histograms(df: pd.DataFrame) -> None:
+    """Create a histogram of the number of subdomains of the URLs"""
     fig, ax = plt.subplots(nrows=1, ncols=2)
     fig.set_figheight(8)
     fig.set_figwidth(16)
@@ -313,6 +324,7 @@ def subdomain_count_histograms(df: pd.DataFrame) -> None:
 
 
 def directory_level_count_histograms(df: pd.DataFrame) -> None:
+    """Create a histogram of the directory depth of the URLs"""
     fig, ax = plt.subplots(nrows=1, ncols=2)
     fig.set_figheight(8)
     fig.set_figwidth(16)
@@ -347,6 +359,7 @@ def directory_level_count_histograms(df: pd.DataFrame) -> None:
 
 
 def url_param_count_histograms(df: pd.DataFrame) -> None:
+    """Create a histogram of the number of URL parameters of the URLs"""
     fig, ax = plt.subplots(nrows=1, ncols=2)
     fig.set_figheight(8)
     fig.set_figwidth(16)
@@ -381,6 +394,7 @@ def url_param_count_histograms(df: pd.DataFrame) -> None:
 
 
 def url_entropy_histogram(df: pd.DataFrame) -> None:
+    """Create a bar chart of the entropy of benign/malicious URLs"""
     fig, ax = plt.subplots(nrows=1, ncols=1)
     fig.set_figheight(8)
     fig.set_figwidth(16)
@@ -401,6 +415,7 @@ def url_entropy_histogram(df: pd.DataFrame) -> None:
 
 
 def domain_entropy_histogram(df: pd.DataFrame) -> None:
+    """Create a bar chart of the entropy of benign/malicious domain names for the URLs"""
     fig, ax = plt.subplots(nrows=1, ncols=1)
     fig.set_figheight(8)
     fig.set_figwidth(16)
@@ -421,6 +436,7 @@ def domain_entropy_histogram(df: pd.DataFrame) -> None:
 
 
 def domain_or_ip_histogram(df: pd.DataFrame) -> None:
+    """Create a bar chart displaying the proportion of each class that is an IP address or has a domain name"""
     fig, ax = plt.subplots(nrows=1, ncols=1)
     fig.set_figheight(8)
     fig.set_figwidth(16)
@@ -447,6 +463,7 @@ def domain_or_ip_histogram(df: pd.DataFrame) -> None:
 
 
 def do_statistics(df: pd.DataFrame) -> None:
+    """Run and display all the charts"""
     benign_malicious_histograms(df)
     tld_counts_histograms(df)
     url_length_histograms(df)
