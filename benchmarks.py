@@ -72,25 +72,18 @@ def run_all(out_dir='benchmarks_output'):
 
     timings = []
 
+    # Binary classification experiments only
+    class_distinguisher_bin = lambda x: 0 if x == 'benign' else 1
+
     # 1) Neural Net - binary
     print('\nPreparing NN (binary)...')
-    class_distinguisher_bin = lambda x: 0 if x == 'benign' else 1
     df_bin = safe_balance(df, class_distinguisher_bin, cap=50_000)
     X_bin, y_bin = prepare_nn_arrays(df_bin, class_distinguisher_bin)
     print('Running NN binary...')
     t_nn_bin = time_nn(X_bin, y_bin, class_names=['benign', 'malicious'])
     timings.append(('NN (binary)', t_nn_bin))
 
-    # 2) Neural Net - multiclass (all)
-    print('\nPreparing NN (multiclass)...')
-    class_distinguisher_all = lambda x: 0 if x == 'benign' else 1 if x == 'phishing' else 2 if x == 'malware' else 3
-    df_all = safe_balance(df, class_distinguisher_all, cap=20_000)
-    X_all, y_all = prepare_nn_arrays(df_all, class_distinguisher_all)
-    print('Running NN multiclass...')
-    t_nn_multi = time_nn(X_all, y_all, class_names=['benign', 'phishing', 'malware', 'defacement'])
-    timings.append(('NN (multiclass)', t_nn_multi))
-
-    # 3) Decision Tree - binary
+    # 2) Decision Tree - binary
     print('\nPreparing Decision Tree (binary)...')
     df_dt_bin = safe_balance(df, class_distinguisher_bin, cap=50_000)
     X_dt_bin, y_dt_bin = prepare_dt_df(df_dt_bin)
@@ -99,23 +92,14 @@ def run_all(out_dir='benchmarks_output'):
     t_dt_bin = time_decision_tree(X_train, X_test, y_train, y_test, class_names=['benign', 'malicious'])
     timings.append(('DecisionTree (binary)', t_dt_bin))
 
-    # 4) Decision Tree - multiclass
-    print('\nPreparing Decision Tree (multiclass)...')
-    df_dt_multi = safe_balance(df, class_distinguisher_all, cap=20_000)
-    X_dt_multi, y_dt_multi = prepare_dt_df(df_dt_multi)
-    X_train, X_test, y_train, y_test = train_test_split(X_dt_multi, y_dt_multi, test_size=0.2, random_state=2)
-    print('Running Decision Tree multiclass...')
-    t_dt_multi = time_decision_tree(X_train, X_test, y_train, y_test, class_names=['benign', 'defacement', 'phishing', 'malware'])
-    timings.append(('DecisionTree (multiclass)', t_dt_multi))
-
-    # 5) Random Forest - multiclass (use same as decision tree multiclass)
-    print('\nPreparing Random Forest (multiclass)...')
-    df_rf = df_dt_multi  # already balanced and feature-extracted
-    X_rf, y_rf = X_dt_multi, y_dt_multi
+    # 3) Random Forest - binary
+    print('\nPreparing Random Forest (binary)...')
+    # reuse df_dt_bin (already balanced and feature-extracted)
+    X_rf, y_rf = X_dt_bin, y_dt_bin
     X_train, X_test, y_train, y_test = train_test_split(X_rf, y_rf, test_size=0.2, random_state=2)
-    print('Running Random Forest multiclass...')
-    t_rf_multi = time_random_forest(X_train, X_test, y_train, y_test)
-    timings.append(('RandomForest (multiclass)', t_rf_multi))
+    print('Running Random Forest binary...')
+    t_rf_bin = time_random_forest(X_train, X_test, y_train, y_test)
+    timings.append(('RandomForest (binary)', t_rf_bin))
 
     # Save timings to CSV
     csv_path = os.path.join(out_dir, 'timings.csv')

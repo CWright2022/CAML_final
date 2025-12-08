@@ -118,26 +118,32 @@ def evaluate_nn(X: np.ndarray, y: np.ndarray, test_size=0.1, class_names: list |
         # Calculate statistics
         correct_count = (predicted == y_test).sum().item()
         accuracy = correct_count / len(y_test)
+        
+        tp = ((predicted == 1) & (y_test == 1)).sum().item()
+        fp = ((predicted == 1) & (y_test == 0)).sum().item()
+        tn = ((predicted == 0) & (y_test == 0)).sum().item()
+        fn = ((predicted == 0) & (y_test == 1)).sum().item()
+        precision = tp / (tp + fp)
+        recall = tp / (tp + fn)
+        f1_score = (2 * precision * recall) / (precision + recall)
+        
 
-        if classes == 2:
-            tp = ((predicted == 1) & (y_test == 1)).sum().item()
-            fp = ((predicted == 1) & (y_test == 0)).sum().item()
-            tn = ((predicted == 0) & (y_test == 0)).sum().item()
-            fn = ((predicted == 0) & (y_test == 1)).sum().item()
+        print('\nResults:')
+        print('True Positives:', tp)
+        print('False Positives:', fp)
+        print('True Negatives:', tn)
+        print('False Negatives:', fn)
+        print()
 
-            print('\nResults:')
-            print('True Positives:', tp)
-            print('False Positives:', fp)
-            print('True Negatives:', tn)
-            print('False Negatives:', fn)
-            print()
-
-            precision = tp / (tp + fp)
-            recall = tp / (tp + fn)
-            f1_score = (2 * precision * recall) / (precision + recall)
+        precision = tp / (tp + fp)
+        recall = tp / (tp + fn)
+        f1_score = (2 * precision * recall) / (precision + recall)
     
     # Print results
     print(f'Accuracy: {accuracy*100:.2f}%')
+    print(f'Precision: {precision*100:.2f}%')
+    print(f'Recall: {recall*100:.2f}%')
+    print(f'F1-score: {f1_score:.2f}')
     if classes == 2:
         print(f'Precision: {precision*100:.2f}%')
         print(f'Recall: {recall*100:.2f}%')

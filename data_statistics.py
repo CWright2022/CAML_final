@@ -89,7 +89,7 @@ def plot_confusion_matrix(y_true, y_pred, class_names):
     sns.heatmap(cm, annot=True, fmt='.2f', cmap='Blues', 
                 xticklabels=class_names, yticklabels=class_names,
                 annot_kws={'size':12},
-                cbar_kws={'label': 'Count'})
+                cbar=False)
     plt.title('Confusion Matrix')
     plt.ylabel('True Label')
     plt.xlabel('Predicted Label')
@@ -235,32 +235,47 @@ def special_character_histograms(df: pd.DataFrame) -> None:
     fig.set_figwidth(16)
     fig.subplots_adjust(bottom=0.25, hspace=0.8, wspace=0.6)
     fig.suptitle(f'Special Character Counts')
-    
-    # First plot (benign special counts)
+
+    bins = np.linspace(0, 100, 11)
+
+    # --- Compute data first so we can align the Y axis ---
+    benign_counts = df[df['type'] == 'benign']['url'] \
+        .apply(count_special_chars).to_list()
+    malicious_counts = df[df['type'] != 'benign']['url'] \
+        .apply(count_special_chars).to_list()
+
+    # Histogram + relative frequency (no plotting yet)
+    benign_hist, _ = np.histogram(benign_counts, bins=bins)
+    malicious_hist, _ = np.histogram(malicious_counts, bins=bins)
+
+    benign_rel = benign_hist / benign_hist.sum()
+    malicious_rel = malicious_hist / malicious_hist.sum()
+
+    # Shared Y-axis limit
+    max_y = max(benign_rel.max(), malicious_rel.max()) * 1.1
+
+    # --- First plot (Benign) ---
     this_ax = ax[0]
-    special_counts = df[df['type'] == 'benign']['url'].apply(count_special_chars).to_list()
-    counts, bins = this_ax.hist(special_counts, bins=np.linspace(0, 100, 11), density=False)[:2]
-    rel_freq = counts / counts.sum()
-    this_ax.cla()
-    this_ax.bar(bins[:-1], rel_freq, width=np.diff(bins), align='center')
+    this_ax.bar(bins[:-1], benign_rel, width=np.diff(bins), align='center')
     this_ax.set_title('Benign URLs')
     this_ax.set_xlabel('Length')
     this_ax.set_ylabel('Relative Frequency')
-    this_ax.set_xticks(bins, bins, rotation=45, ha='right', rotation_mode='anchor', size=8)
+    this_ax.set_xticks(bins, bins, rotation=45, ha='right',
+                       rotation_mode='anchor', size=8)
     this_ax.xaxis.set_major_formatter(FormatStrFormatter('%0d'))
+    this_ax.set_ylim(0, max_y)
 
-    # Second plot (malicious special counts)
+    # --- Second plot (Malicious) ---
     this_ax = ax[1]
-    special_counts = df[df['type'] != 'benign']['url'].apply(count_special_chars).to_list()
-    counts, bins = this_ax.hist(special_counts, bins=np.linspace(0, 100, 11), density=False)[:2]
-    rel_freq = counts / counts.sum()
-    this_ax.cla()
-    this_ax.bar(bins[:-1], rel_freq, width=np.diff(bins), align='edge')
+    this_ax.bar(bins[:-1], malicious_rel, width=np.diff(bins), align='edge')
     this_ax.set_title('Malicious URLs')
     this_ax.set_xlabel('Length')
     this_ax.set_ylabel('Relative Frequency')
-    this_ax.set_xticks(bins, bins, rotation=45, ha='right', rotation_mode='anchor', size=8)
+    this_ax.set_xticks(bins, bins, rotation=45, ha='right',
+                       rotation_mode='anchor', size=8)
     this_ax.xaxis.set_major_formatter(FormatStrFormatter('%0d'))
+    this_ax.set_ylim(0, max_y)
+
 
 
 def subdomain_count_histograms(df: pd.DataFrame) -> None:
