@@ -5,6 +5,7 @@ import numpy as np
 import data_statistics
 from sklearn.tree import export_graphviz, export_text
 import graphviz
+from typing import Optional
 
 def train_decision_tree(model, X_train, X_test, y_train, y_test, class_names: list | None = None) -> None:
     """
@@ -82,6 +83,19 @@ def train_decision_tree(model, X_train, X_test, y_train, y_test, class_names: li
     # plot_ = sns.heatmap(cf_matrix/np.sum(cf_matrix), annot=True,fmt= '0.2%')
     # plt.show()
 
+    # Plot feature importances if available
+    if hasattr(model, 'feature_importances_'):
+        try:
+            
+            if hasattr(X_train, 'columns'):
+                feature_names = list(X_train.columns)
+            else:
+                feature_names = [f'feature_{i}' for i in range(len(model.feature_importances_))]
+
+            plot_feature_importances(model, feature_names, save_path='decision_tree_feature_importances.png')
+        except Exception:
+            pass
+
 
 def visualize_tree(model, feature_names, class_names) -> None:
     dot_data = export_graphviz(
@@ -103,3 +117,43 @@ def visualize_tree(model, feature_names, class_names) -> None:
 def print_tree(model, feature_names):
     tree_rules = export_text(model, feature_names=list(feature_names), max_depth=3)
     print(tree_rules)
+
+
+def plot_feature_importances(model, feature_names: list, top_n: Optional[int] = None, save_path: Optional[str] = None, show: bool = True) -> None:
+    """
+    Plot horizontal bar chart of feature importances
+    """
+    if not hasattr(model, 'feature_importances_'):
+        print('Model does not expose feature_importances_. Skipping plot.')
+        return
+
+    importances = np.asarray(model.feature_importances_)
+    if importances.size == 0:
+        print('No feature importances found. Skipping plot.')
+        return
+
+    if top_n is None:
+        top_n = len(feature_names)
+
+    # pair names with importances and sort
+    pairs = list(zip(feature_names, importances))
+    pairs_sorted = sorted(pairs, key=lambda x: x[1], reverse=True)[:top_n]
+    names, vals = zip(*pairs_sorted)
+
+    y_pos = np.arange(len(names))
+    plt.figure(figsize=(8, max(4, len(names)*0.4)))
+    bars = plt.barh(y_pos, vals, align='center', color='C1')
+    plt.yticks(y_pos, names)
+    plt.gca().invert_yaxis()  # largest on top
+    plt.xlabel('Importance')
+    plt.title('Feature Importances')
+
+    for bar, v in zip(bars, vals):
+        plt.text(bar.get_width() + max(0.001, max(vals)*0.01), bar.get_y() + bar.get_height()/2, f'{v:.4f}', va='center')
+
+    plt.tight_layout()
+    if save_path:
+        plt.savefig(save_path)
+        print(f'Feature importances plot saved to: {save_path}')
+    if show:
+        plt.show()

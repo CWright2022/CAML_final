@@ -1,4 +1,7 @@
 model,seconds
-NN (binary),217.2435
-DecisionTree (binary),3.0461
-RandomForest (binary),10.6172
+NN (binary),217.0661
+DecisionTree (binary),4.8980
+RandomForest (binary),8.9383
+NN (multiclass),142.6099
+DecisionTree (multiclass),6.0801
+RandomForest (multiclass),6.5764
