@@ -2,6 +2,7 @@ from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import confusion_matrix, classification_report, accuracy_score, precision_score, recall_score, f1_score
 import numpy as np
 import data_statistics
+import matplotlib.pyplot as plt
 
 def train_random_forest(
     X_train, # Feature matrix for training data
@@ -14,6 +15,11 @@ def train_random_forest(
     n_jobs: int = -1, # CPU parallelization (if -1, it uses all cores)
     random_state: int = 42, # Helps tree building
     class_names: list | None = None, # Use for plotting and reports
+    
+    # Testing
+    feature_names: list | None = None,
+    plot_feature_importance = True,
+
 ) -> None:
 
     # Trains the Random Forest model given the specified hyperparameters
@@ -107,6 +113,33 @@ def train_random_forest(
                 else str(idx)
             )
             print(f"  {name}: Precision={p:0.4f}, Recall={r:0.4f}, F1={f:0.4f}")
+
+    # RandomForestClassifier exposes feature_importances_ after fitting.
+    importances = model.feature_importances_
+
+    # If no feature names are provided, fall back to numeric indices
+    if feature_names is None:
+        feature_names = [f"Feature {i}" for i in range(len(importances))]
+
+    # Sort features by importance (highest first)
+    indices = np.argsort(importances)[::-1]
+
+    print("\n=== Random Forest Feature Importances ===")
+    for rank, idx in enumerate(indices):
+        fname = feature_names[idx] if idx < len(feature_names) else f"Feature {idx}"
+        print(f"{rank+1:2d}. {fname:25s}  Importance = {importances[idx]:0.4f}")
+
+    # Optional feature-importance bar chart (useful for the paper/report)
+    if plot_feature_importance:
+        plt.figure(figsize = (8, 5))
+        sorted_names = [feature_names[i] for i in indices]
+
+        plt.title("Random Forest Feature Importances")
+        plt.bar(range(len(importances)), importances[indices], align = "center")
+        plt.xticks(range(len(importances)), sorted_names, rotation = 45, ha = "right")
+        plt.ylabel("Importance")
+        plt.tight_layout()
+        plt.show()
 
     # Plots the confusion matrix
     if class_names is None:

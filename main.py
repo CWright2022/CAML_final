@@ -133,6 +133,7 @@ def main() -> None:
             n_jobs=-1,
             random_state=42,
             class_names=['benign', 'defacement', 'phishing', 'malware'],
+            feature_names = X_train.columns.tolist()  
         )
 
     elif args.random_forest_binary:
