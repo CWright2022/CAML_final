@@ -73,7 +73,7 @@ def train_random_forest(
     )
 
     # Completes the classification report
-    print("\nClassification report:")
+    print("\n=== Classification Report ===")
     try:
         # If class names are equivalent to number of unique labels, then uses them
         if class_names is not None and len(class_names) == len(unique_labels):
@@ -114,14 +114,13 @@ def train_random_forest(
             )
             print(f"  {name}: Precision={p:0.4f}, Recall={r:0.4f}, F1={f:0.4f}")
 
-    # RandomForestClassifier exposes feature_importances_ after fitting.
     importances = model.feature_importances_
 
-    # If no feature names are provided, fall back to numeric indices
+    # If no feature names are provided, program falls back to numeric indices
     if feature_names is None:
         feature_names = [f"Feature {i}" for i in range(len(importances))]
 
-    # Sort features by importance (highest first)
+    # Sort features by importance with the highest first
     indices = np.argsort(importances)[::-1]
 
     print("\n=== Random Forest Feature Importances ===")
@@ -129,17 +128,35 @@ def train_random_forest(
         fname = feature_names[idx] if idx < len(feature_names) else f"Feature {idx}"
         print(f"{rank+1:2d}. {fname:25s}  Importance = {importances[idx]:0.4f}")
 
-    # Optional feature-importance bar chart (useful for the paper/report)
+    # Feature-importance bar chart
     if plot_feature_importance:
-        plt.figure(figsize = (8, 5))
+        plt.figure(figsize=(8, 5))
         sorted_names = [feature_names[i] for i in indices]
+        sorted_importances = importances[indices]
 
         plt.title("Random Forest Feature Importances")
-        plt.bar(range(len(importances)), importances[indices], align = "center")
-        plt.xticks(range(len(importances)), sorted_names, rotation = 45, ha = "right")
-        plt.ylabel("Importance")
+        # Horizontal bar chart
+        bars = plt.barh(range(len(sorted_importances)), sorted_importances, align="center")
+        # Highest importance at the top
+        plt.gca().invert_yaxis()
+        plt.yticks(range(len(sorted_importances)), sorted_names)
+        plt.xlabel("Importance")
+        plt.ylabel("Features")
+
+        # Sets value labels inside the bars
+        for bar in bars:
+            width = bar.get_width()
+            y_pos = bar.get_y() + bar.get_height() / 2
+
+            # Clamp text position so it never goes past left boundary
+            text_x = max(width - 0.005, 0.002)
+
+            plt.text(text_x, y_pos, f"{width:.4f}", va = "center", ha = "right", color = "white", clip_on = True)
         plt.tight_layout()
         plt.show()
+
+
+
 
     # Plots the confusion matrix
     if class_names is None:
