@@ -42,7 +42,7 @@ def train_random_forest(
         recall = recall_score(y_test, pred, average = "binary", zero_division = 0)
         f1 = f1_score(y_test, pred, average = "binary", zero_division = 0)
     else:
-        # For multiclass, present macro averages
+        # For multiclass classifier, presents macro averages
         precision = precision_score(y_test, pred, average = "macro", zero_division = 0)
         recall = recall_score(y_test, pred, average = "macro", zero_division = 0)
         f1 = f1_score(y_test, pred, average = "macro", zero_division = 0)
@@ -66,10 +66,10 @@ def train_random_forest(
         else f"F1 Score : {f1:0.4f} (binary)"
     )
 
-    # Complete classification report
+    # Completes the classification report
     print("\nClassification report:")
     try:
-        # If class names are equivalent to number of unique labels, then use them
+        # If class names are equivalent to number of unique labels, then uses them
         if class_names is not None and len(class_names) == len(unique_labels):
             print(
                 classification_report(
@@ -82,7 +82,7 @@ def train_random_forest(
 
         print(classification_report(y_test, pred, zero_division = 0))
 
-    # Binary-specific breakdown
+    # Completes the binary-specific breakdown
     if is_binary:
         cm = confusion_matrix(y_test, pred)  # [[TN, FP], [FN, TP]]
         tn, fp, fn, tp = cm.ravel()
@@ -108,11 +108,11 @@ def train_random_forest(
             )
             print(f"  {name}: Precision={p:0.4f}, Recall={r:0.4f}, F1={f:0.4f}")
 
-    # Confusion matrix plot
+    # Plots the confusion matrix
     if class_names is None:
         # If class names are not provided, provides conversion of labels to strings
         class_names = [str(l) for l in sorted(unique_labels.tolist())]
 
     print("Confusion matrix:")
-    # Call the project's plotting function
+    # Calls the project's plotting function
     data_statistics.plot_confusion_matrix(y_test, pred, class_names)
